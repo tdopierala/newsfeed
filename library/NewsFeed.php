@@ -14,11 +14,25 @@ class NewsFeed {
 
     private $db;
 
-    public function __construct(){
+    private $clear_queue = true;
+    private $save = false;
+
+    public function __construct($argv){
 
         $this->db = new Database();
 
-        $this->execute();
+        for($a=1; $a<count($argv); $a++){
+            switch($argv[$a]){
+                
+                case 'collect':
+                    $this->execute();
+                break;
+
+                case 'load':
+                    $this->loadSourceList();
+                break;
+            }
+        }
 
     }
 
@@ -34,7 +48,11 @@ class NewsFeed {
 
                 $exe = $this->parse($source->script);
 
-                //$this->db->queueClear($source->qid);
+                if($this->clear_queue)
+                    $this->db->queueClear($source->qid);
+
+                if($this->save)
+                    $this->save();
 
             }
         }
@@ -56,10 +74,12 @@ class NewsFeed {
     private function parse($script){
 
         $x = new SimpleXmlElement($this->content);
+        $news_list=[];
         
         //parse by source
         require_once(__DIR__ . "/../scripts/" . $script . ".php");
 
+        print_r($news_list);
         $this->news_list = $news_list;
         return $news_list;
 
@@ -71,11 +91,16 @@ class NewsFeed {
 
             if(!$this->db->linkExists($entry)){
                 
-                //$ex = $this->db->newLink($entry);
+                $ex = $this->db->newLink($entry);
 
             }
         }
         
+    }
+
+    private function loadSourceList(){
+
+        $this->db->loadSource($entry);
     }
 
     public function __toString(){

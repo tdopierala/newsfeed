@@ -129,4 +129,11 @@ class Database {
 
         return $stmt->execute();
     }
+
+    public function loadSource(){
+
+        $stmt = $this->dbh->prepare(
+            //"INSERT into dashboard_sites (ds_title, ds_description, ds_image, ds_date, ds_base_url, ds_origin_url) values (:title, :description, :image, :date, :base_url, :origin_url)"
+        );
+    }
 }

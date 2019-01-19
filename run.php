@@ -2,4 +2,5 @@
 
 require_once( __DIR__ . "/library/NewsFeed.php" );
 
-$feed = new NewsFeed();
+//print_r($argv);
+$feed = new NewsFeed($argv);
