@@ -1,16 +1,13 @@
 <?php
 
-$news_list=[];
 foreach($x->channel->item as $entry) {
-
-    print_r($entry->children("media", true)->group);
 
     $news_list[] = new Link(array(
         'title' => $entry->title,
         'description' => strip_tags((string)$entry->description),
         'base_url' => $entry->link,
-        'date' => $entry->pubDate,
-        //'image' => (string)$entry->enclosure['url'],
+        'date' => date("Y-m-d H:i:s",strtotime($entry->pubDate)),
+        'image' => (string)$entry->children("media", true)->thumbnail->attributes()['url'],
         'origin_url' => $entry->guid,
         'link2' => $entry->link
     ));
