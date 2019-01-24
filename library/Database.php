@@ -108,7 +108,11 @@ class Database {
 
         $stmt->bindParam(':qid', $qid);
 
-        return $stmt->execute();
+        $res = $stmt->execute();
+
+        $this->clear($stmt);
+
+        return $res;
     }
 
     public function linkExists($link){
@@ -118,11 +122,13 @@ class Database {
 
     public function newLink($link){
 
-        $stmt = $this->dbh->prepare("INSERT into dashboard_sites (ds_title, ds_description, ds_image, ds_date, ds_base_url, ds_origin_url) values (:title, :description, :image, :date, :base_url, :origin_url)");
+        $stmt = $this->dbh->prepare("INSERT into dashboard_sites (ds_title, ds_hash, ds_description, ds_image_url, ds_image_local, ds_date, ds_base_url, ds_origin_url) values (:title, :hash, :description, :image_url, :image_local, :date, :base_url, :origin_url)");
 
         $stmt->bindParam(':title', $link->title);
+        $stmt->bindParam(':hash', $link->hash);
         $stmt->bindParam(':description', $link->description);
-        $stmt->bindParam(':image', $link->image);
+        $stmt->bindParam(':image_url', $link->image_url);
+        $stmt->bindParam(':image_local', $link->image_local);
         $stmt->bindParam(':date', $link->date);
         $stmt->bindParam(':base_url', $link->base_url);
         $stmt->bindParam(':origin_url', $link->origin_url);
@@ -130,10 +136,40 @@ class Database {
         return $stmt->execute();
     }
 
+    public function updateLink($link){
+
+        $stmt = $this->dbh->prepare("UPDATE dashboard_sites set ds_description=:description, ds_image_url=:image_url, ds_image_local=:image_local, ds_date=:date WHERE ds_hash=:hash");
+
+        //$stmt->bindParam(':title', $link->title);
+        $stmt->bindParam(':hash', $link->hash);
+        $stmt->bindParam(':description', $link->description);
+        $stmt->bindParam(':image_url', $link->image_url);
+        $stmt->bindParam(':image_local', $link->image_local);
+        $stmt->bindParam(':date', $link->date);
+
+        return $stmt->execute();
+    }
+
+    private function func($proc){
+
+        $stmt = $this->dbh->prepare("CALL " . $proc . "(0)");
+
+        return $stmt->execute();
+    }
+
+    public function getBrokenFeeds(){
+
+        $stmt = $this->dbh->query("SELECT ds_title, ds_hash, ds_description, ds_image_url, ds_image_local, ds_date, ds_base_url, ds_origin_url FROM dashboard_sites WHERE ds_image_url == '' or ds_image_local is null");
+        //$stmt->execute();
+        
+        $stmt->setFetchMode(PDO::FETCH_OBJ);
+        $row=$stmt->fetch();
+
+        return $row;
+    }
+
     public function loadSource(){
 
-        $stmt = $this->dbh->prepare(
-            //"INSERT into dashboard_sites (ds_title, ds_description, ds_image, ds_date, ds_base_url, ds_origin_url) values (:title, :description, :image, :date, :base_url, :origin_url)"
-        );
+        return $this->func("setQueue");
     }
 }

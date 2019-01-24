@@ -3,10 +3,12 @@
 class Link {
 
     public $title;
+    public $hash;
     public $description;
     public $base_url;
     public $date;
-    public $image;
+    public $image_url;
+    public $image_local;
     public $origin_url;
     public $link2;
 
