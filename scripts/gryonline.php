@@ -10,6 +10,8 @@ foreach($x->channel->item as $entry) {
     $dom->load($html);
 
     $div = $dom->find('.bpic');
+
+    //var_dump($_link);
     
     if(count($div)>0){
 
@@ -19,9 +21,12 @@ foreach($x->channel->item as $entry) {
 
         $image_url = $c->getAttribute('src');
 
+        if(substr($image_url,0,1) == ".") $sub=2;
+        else $sub = 1;
+
         $url = explode('/',$_link);
 
-        $image_url = $url[0] . "//" . $url[2] . substr($image_url, 1);
+        $image_url = $url[0] . "//" . $url[2] ."/". substr($image_url, $sub);
 
     } else {
 
@@ -38,6 +43,8 @@ foreach($x->channel->item as $entry) {
             }
         }
     }
+
+    //var_dump($image_url);
 
     $news_list[] = new Link(array(
         'title' => $entry->title,
