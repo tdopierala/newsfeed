@@ -28,37 +28,56 @@ class NewsFeed {
 
             $this->db = new Database();
 
-            for($a=1; $a<count($argv); $a++){
-                switch($argv[$a]){
-                    
-                    //collect news
-                    case 'get':
-                        $this->execute();
-                    break;
-
-                    //collect and update
-                    case 'update':
-                        $this->update_enable = true;
-                        $this->execute();
-                    break;
-
-                    //collect from all sources
-                    case 'getall':
-                        $this->loop();
-                    break;
-
-                    //set queue
-                    case 'load':
-                        $this->loadSourceList();
+            if(isset($argv[2])) {
+                switch($argv[2]){
+                    case '-q':
+                        $this->clear_queue = false;
                     break;
                 }
             }
 
-        } catch (Exception $e) {
+            $run = ""; //default set of run
+
+            for($a=1; $a<count($argv); $a++){
+                switch($argv[$a]){
+                    //run 
+                    case 'get': $run = "get"; break;
+                    //case 'update': $run = "update"; break;
+                    case 'getall': $run = "getall"; break;
+                    case 'load': $run = "load"; break;
+                    //options
+                    case '-q': $this->clear_queue = false; break; //don't clear queue
+                    case '-s': $this->save = false; break; //don't save to db
+                    case '-u': $this->update_enable = true; //update records
+                }
+            }
+
+            switch($run){
+                    
+                //collect news
+                case 'get':
+                    $this->execute();
+                break;
+
+                //collect from all sources
+                case 'getall':
+                    $this->loop();
+                break;
+
+                //set queue
+                case 'load':
+                    $this->loadSourceList();
+                break;
+            }
+
+        } catch (Exception|EmptyCollectionException $e) {
             //print "Error: ".$e->getMessage();
             print date("Y-m-d H:i:s").": {".$e->getMessage() . "} in " . $e->getFile() . ", line " . $e->getLine() . "\n";
             die();
-        }
+        } /* finally {
+            print "error?\n";
+            die();
+        } */
 
     }
 
@@ -80,6 +99,7 @@ class NewsFeed {
 
                 $source = $this->sources[0];
                 $this->feed_url = $source->url;
+                echo "Donloading data from ".$source->name." (".$source->url.")\n";
                 $content = $this->getContent();
 
                 if($content) {
@@ -164,7 +184,7 @@ class NewsFeed {
         
         //parse by source
         if(file_exists(_ROOTDIR_ . "/scripts/" . $script . ".php")){
-            require(_ROOTDIR_ . "/scripts/" . $script . ".php");
+            require_once(_ROOTDIR_ . "/scripts/" . $script . ".php");
         } else {
             return false;
         }
@@ -206,7 +226,6 @@ class NewsFeed {
                 $this->db->newLink($entry);
             }
         }
-        
     }
 
     private function repere(){
@@ -220,7 +239,7 @@ class NewsFeed {
     private function loadSourceList(){
 
         $res = $this->db->loadSource();
-        //var_dump($res);
+        echo date("Y-m-d H:i:s") . ": Source list was successfuly loaded.\n";
     }
 
     public function __toString(){

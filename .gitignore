@@ -4,6 +4,8 @@
 # ignore files in thuumbnails directory
 /images/*
 
+/tmp/*
+
 # ignore OS generated files
 ehthumbs.db
 Thumbs.db

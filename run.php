@@ -2,7 +2,7 @@
 
 define("_ROOTDIR_", __DIR__);
 
-require_once( __DIR__ . "/library/std.lib.php" );
+require_once( __DIR__ . "/library/Std.lib.php" );
 require_once( __DIR__ . "/library/NewsFeed.php" );
 
 $feed = new NewsFeed($argv);
