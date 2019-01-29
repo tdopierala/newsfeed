@@ -11,7 +11,7 @@ foreach($x->channel->item as $entry) {
 
     $div = $dom->find('.bpic');
 
-    //var_dump($_link);
+    if($_this->debug) var_dump($_link);
     
     if(count($div)>0){
 
@@ -54,5 +54,6 @@ foreach($x->channel->item as $entry) {
         'image_url' => $image_url,
         'origin_url' => $entry->guid,
         'link2' => $entry->link
+        ,'content' => $html
     ));
 }

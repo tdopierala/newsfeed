@@ -3,8 +3,11 @@
 foreach($x->channel->item as $entry) {
 
     $_link = (string)$entry->link;
+    
+    if($_this->debug) var_dump($_link);
 
     $dom->loadFromFile($_link);
+    $html = $dom->outerHtml;
     $div = $dom->find('.image_big');
 
     $dom->load($div->innerHtml);
@@ -28,10 +31,11 @@ foreach($x->channel->item as $entry) {
     $news_list[] = new Link(array(
         'title' => $entry->title,
         'description' => strip_tags((string)$entry->description),
-        'base_url' => (string)$entry->link,
+        'base_url' => $_link,
         'date' => date("Y-m-d H:i:s",strtotime($entry->pubDate)),
         'image_url' => $image_url,
         'origin_url' => $entry->guid,
         'link2' => $entry->link
+        ,'content' => $html
     ));
 }

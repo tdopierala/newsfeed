@@ -20,9 +20,10 @@ foreach($x->channel->item as $entry) {
     $url = explode("/",$_link)[2];
     switch($url){
         case "www.tvn24.pl":
-            //var_dump($url);
+            if($_this->debug) var_dump($_link);
 
             $dom->loadFromFile($_link);
+            $html = $dom->outerHtml;
             $figure = $dom->find('figure', 0);
 
             //var_dump(strlen($div->innerHtml));
@@ -45,9 +46,10 @@ foreach($x->channel->item as $entry) {
 
         break;
         case "konkret24.tvn24.pl":
-            //var_dump($url);
+            if($_this->debug) var_dump($_link);
 
             $dom->loadFromFile($_link);
+            $html = $dom->outerHtml;
             $picture = $dom->find('picture', 0);
 
             //var_dump(strlen($div->innerHtml));
@@ -79,6 +81,7 @@ foreach($x->channel->item as $entry) {
         'image_url' => $image_url,
         'origin_url' => $entry->guid,
         'link2' => $entry->link
+        ,'content' => $html
     ));
     
 }

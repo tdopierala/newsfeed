@@ -3,14 +3,16 @@
 foreach($x->channel->item as $entry) {
 
     $_link = (string)$entry->link;
-    //var_dump($_link);
+    
+    if($_this->debug) var_dump($_link);
 
     $content = file_get_contents($_link);
-    var_dump(mb_detect_encoding($content));
+    //var_dump(mb_detect_encoding($content));
+
     $content = preg_replace(['#<script .*?>(.*?)</script>#si','#<script>(.*?)</script>#si'], '', $content);
 
     $dom->load($content);
-    var_dump(strlen($dom->innerHtml));
+    //var_dump(strlen($dom->innerHtml));
 
     if(strlen($dom->innerHtml)==0) {
         var_dump("Link upload false (".$_link.")");
@@ -59,5 +61,6 @@ foreach($x->channel->item as $entry) {
         'image_url' => $image_url,
         'origin_url' => $entry->guid,
         'link2' => $entry->link
+        ,'content' => $content
     ));
 }

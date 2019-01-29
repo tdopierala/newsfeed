@@ -4,6 +4,8 @@ foreach($x->channel->item as $entry) {
 
     $_link = (string)$entry->link;
 
+    if($_this->debug) var_dump($_link);
+
     $dom->loadFromFile($_link);
     $img = $dom->find('.art-img',0);
 
@@ -25,5 +27,6 @@ foreach($x->channel->item as $entry) {
         'image_url' => $image_url,
         'origin_url' => $entry->guid,
         'link2' => $entry->link
+        ,'content' => $dom->outerHtml
     ));
 }
