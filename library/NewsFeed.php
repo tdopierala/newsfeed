@@ -48,11 +48,12 @@ class NewsFeed {
                     //case 'update': $run = "update"; break;
                     case 'getall': $run = "getall"; break;
                     case 'load': $run = "load"; $opt = isset($argv[$a+1]) ? $argv[$a+1] : null; break;
+                    case 'update': $run = "update"; break;
                     //options
                     case '-q': $this->clear_queue = false; break; //don't clear queue
                     case '-s': $this->save = false; break; //don't save to db
-                    case '-u': $this->update_enable = true; //update records
-                    case '-d': $this->debug = true; //update records
+                    case '-u': $this->update_enable = true; break; //update records
+                    case '-d': $this->debug = true; break; //update records
                 }
             }
 
@@ -71,6 +72,10 @@ class NewsFeed {
                 //set queue
                 case 'load':
                     $this->loadSourceList($opt);
+                break;
+
+                case 'update':
+                    $this->update();
                 break;
             }
 
@@ -210,8 +215,6 @@ class NewsFeed {
         for($i=0; $i<count($news_list); $i++){
             $news_list[$i]->hash = Std::short_md5($news_list[$i]->base_url);
 
-            var_dump($news_list[$i]->image_url);
-
             if(!empty($news_list[$i]->image_url) or trim($news_list[$i]->image_url) != ""){
 
                 $imgtype = null; $ext = null;
@@ -261,7 +264,11 @@ class NewsFeed {
                     $image = file_get_contents($news_list[$i]->image_url);
                     file_put_contents($new_img, $image);
 
-                    $this->prepareImage($new_img);
+                    if($this->prepareImage($new_img)){
+                        Log::init("Image ". $news_list[$i]->image_local ." saved properly.");
+                    } else {
+                        Log::init("Saving image ". $news_list[$i]->image_local ." failed.");
+                    }
                 }
             }
         }
@@ -296,6 +303,14 @@ class NewsFeed {
         $feed = $this->db->getBrokenFeeds();
     }
 
+    private function update(){
+
+        $this->convertOldImages();
+
+        Log::init("Update finish.");
+        return true;
+    }
+
     private function loadSourceList($opt){
 
         $res = $this->db->loadSource($opt);
@@ -305,7 +320,29 @@ class NewsFeed {
 
     private function prepareImage($_image){
 
-        $ext = substr($_image, strrpos($_image, ".")+1);
+        $imgtype = null; $ext = null;
+        $exif = @exif_imagetype($_image);
+        switch($exif) {
+            case IMG_GIF:  $imgtype = 'image/gif';  $ext = "gif"; break;
+            case IMG_JPG:  $imgtype = 'image/jpg';  $ext = "jpg"; break;
+            case IMG_JPEG: $imgtype = 'image/jpeg'; $ext = "jpeg"; break;
+            case IMG_PNG:  $imgtype = 'image/png';  $ext = "png"; break;
+
+            case IMAGETYPE_GIF:  $imgtype = 'image/gif';  $ext = "gif"; break;
+            case IMAGETYPE_JPEG: $imgtype = 'image/jpeg'; $ext = "jpeg"; break;
+            case IMAGETYPE_PNG:  $imgtype = 'image/png';  $ext = "png"; break;
+
+            default: $imgtype = 'unknown';
+        }
+
+        if(is_null($imgtype) or $imgtype == 'unknown' or is_null($ext)) {
+            
+            Log::init("Unknown image type for: ". $image);
+            
+            return false;
+        }
+
+        //$ext = substr($_image, strrpos($_image, ".")+1);
         $filename = substr($_image, strrpos($_image, "/")+1, (-1)*(strlen($ext)+1));
 
         $_origin = _ROOTDIR_ . '/images/normal/' . $filename . ".jpg";
@@ -317,15 +354,16 @@ class NewsFeed {
             case 'gif':  $image = imagecreatefromgif($_image); break;
             case 'png':  $image = imagecreatefrompng($_image); break;
         }
-
-        imagejpeg($image, $_origin);
+        
+        if(!file_exists($_origin))
+            imagejpeg($image, $_origin);
 
         $img = imagecreatefromjpeg($_origin);
         //$dir = _ROOTDIR_ ."/images/thumbnails/";
         //if (!file_exists($dir) && !is_dir($dir)) mkdir($dir);
 
         $thumb_width = 300;
-        $thumb_height = 150;
+        $thumb_height = 200;
 
         $width = imagesx($img);
         $height = imagesy($img);
@@ -344,7 +382,7 @@ class NewsFeed {
         $thumb = imagecreatetruecolor( $thumb_width, $thumb_height );
 
         // resize and crop
-        $result = imagecopyresampled(
+        $crop = imagecopyresampled(
             $thumb,
             $img,
             0 - ($new_width - $thumb_width) / 2, // center the image horizontally
@@ -354,7 +392,68 @@ class NewsFeed {
             $width, $height
         );
 
-        imagejpeg($thumb, $_thumb);
+        if(file_exists($_thumb)) unlink($_thumb); //removes thumbnail if exist
+
+        $save = imagejpeg($thumb, $_thumb);
+
+        return $crop and $save ? true : false;
+    }
+
+    private function convertOldImages(){
+
+        $source = '/images/origin/';
+        $images = scandir(_ROOTDIR_ . $source);
+
+        foreach($images as $image){
+            $dirs = ['.','..','normal','origin','thumb','junk'];
+            if(!in_array($image, $dirs)) {
+
+                if(substr($image, -10) == "_to_remove") continue;
+
+                $path = _ROOTDIR_ . $source . $image;
+                $copy = _ROOTDIR_ . '/tmp/' . $image;
+                $location1 = _ROOTDIR_ . '/images/junk/' . $image;
+                $location2 = _ROOTDIR_ . '/images/origin/' . $image;
+
+                $result = $this->prepareImage($path);
+
+                if($result){
+                    
+                    //if(!copy($path, $location2)) { Log::init("Image ". $image ." copy failed."); continue; }
+                    
+                    //if(!rename($path, $location1)) { Log::init("Image ". $image ." moving failed."); continue; }
+
+                    Log::init("Image ". $image ." saved properly.");
+
+                    continue;
+                }
+
+                /* if(!$result){
+
+                    $imgurl = $this->db->getDBImage($image);
+                    
+                    file_put_contents($copy, file_get_contents(str_replace(' ', '%20', $imgurl[0])));
+
+                    $web = $this->prepareImage($copy);
+
+                    if($web){
+
+                        if(!copy($copy, $location2)) { Log::init("Image ". $image ." copy failed."); continue; }
+                    
+                        if(!rename($copy, $location1)) { Log::init("Image ". $image ." moving failed."); continue; }
+
+                        if(!rename($path, $path."_to_remove")) { Log::init("Image ". $image ." moving failed."); continue; }
+
+                        Log::init("Image ". $image ." saved properly.");
+
+                        continue;
+                    }
+                } */
+                
+                Log::init("[!!] Saving image ". $image ." failed.");
+            }
+        }
+
     }
 
     public function __toString(){

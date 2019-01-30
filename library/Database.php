@@ -134,17 +134,6 @@ class Database {
 
     public function updateLink($link){
 
-        /* $stmt = $this->dbh->prepare("UPDATE dashboard_sites set ds_description=:description, ds_image_url=:image_url, ds_image_local=:image_local, ds_date=:date WHERE ds_hash=:hash");
-
-        //$stmt->bindParam(':title', $link->title);
-        $stmt->bindParam(':hash', $link->hash);
-        $stmt->bindParam(':description', $link->description);
-        $stmt->bindParam(':image_url', $link->image_url);
-        $stmt->bindParam(':image_local', $link->image_local);
-        $stmt->bindParam(':date', $link->date);
-
-        return $stmt->execute(); */
-
         $params = [
             null,
             $link->title, 
@@ -182,6 +171,18 @@ class Database {
         
         $stmt->setFetchMode(PDO::FETCH_OBJ);
         $row=$stmt->fetch();
+
+        return $row;
+    }
+
+    public function getDBImage($imagename){
+        
+        $stmt = $this->dbh->prepare("SELECT ds_image_url from dashboard_sites WHERE ds_image_local like :imagelocal LIMIT 1");
+
+        $stmt->execute(['imagelocal' => $imagename]);
+        $row=$stmt->fetch();
+
+        $this->clear($stmt);
 
         return $row;
     }
