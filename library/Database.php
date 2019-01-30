@@ -13,22 +13,18 @@ class Database {
 
     private $tables;
 
-    public function __construct() {
+    public function __construct($auth = ['dbhost'=>'192.168.1.10', 'dbname'=>'newsfeed', 'dbuser'=>'newsfeed', 'dbpass'=>'newsfeed']) {
 
-        $this->db_host = "192.168.1.10";
-        $this->db_name = "newsfeed";
-        $this->db_user = "newsfeed";
-        $this->db_pass = "newsfeed";
+        $this->db_host = $auth['dbhost'];
+        $this->db_name = $auth['dbname'];
+        $this->db_user = $auth['dbuser'];
+        $this->db_pass = $auth['dbpass'];
 
         $this->tables = [
             'sites' => 'dashboard_sites'
         ];
 
         return $this->connect();
-    }
-
-    public function __destruct(){
-
     }
 
     private function connect() {
@@ -47,7 +43,6 @@ class Database {
     private function clear($res) {
 
         $res->closeCursor();
-
         return true;
     }
 
@@ -56,7 +51,7 @@ class Database {
         return $this->tables[$table];
     }
 
-    private function select($query) {
+    private function select($query) { //to remove
 
         $stmt = $this->dbh->query($query);
         $stmt->setFetchMode(PDO::FETCH_OBJ);
@@ -68,7 +63,7 @@ class Database {
         return $q;
     }
 
-    private function insert($query) {
+    private function insert($query) { //to remove
 
         $this->dbh->exec($query);
 
@@ -91,7 +86,7 @@ class Database {
 
     }
 
-    public function queue(){
+    public function queue(){ //to remove
 
         $stmt = $this->dbh->query("SELECT qid, name, url, script FROM queue LIMIT 1");
         //$stmt->execute();
@@ -122,23 +117,24 @@ class Database {
 
     public function newLink($link){
 
-        $stmt = $this->dbh->prepare("INSERT into dashboard_sites (ds_title, ds_hash, ds_description, ds_image_url, ds_image_local, ds_date, ds_base_url, ds_origin_url) values (:title, :hash, :description, :image_url, :image_local, :date, :base_url, :origin_url)");
+        $params = [
+            0=>$link->title, 
+            1=>$link->hash, 
+            2=>$link->description, 
+            3=>$link->image_url,
+            4=>$link->image_local,
+            5=>$link->date,
+            6=>$link->base_url,
+            7=>$link->origin_url,
+            8=>$link->content
+        ];
 
-        $stmt->bindParam(':title', $link->title);
-        $stmt->bindParam(':hash', $link->hash);
-        $stmt->bindParam(':description', $link->description);
-        $stmt->bindParam(':image_url', $link->image_url);
-        $stmt->bindParam(':image_local', $link->image_local);
-        $stmt->bindParam(':date', $link->date);
-        $stmt->bindParam(':base_url', $link->base_url);
-        $stmt->bindParam(':origin_url', $link->origin_url);
-
-        return $stmt->execute();
+        return $this->func('new_link', $params);
     }
 
     public function updateLink($link){
 
-        $stmt = $this->dbh->prepare("UPDATE dashboard_sites set ds_description=:description, ds_image_url=:image_url, ds_image_local=:image_local, ds_date=:date WHERE ds_hash=:hash");
+        /* $stmt = $this->dbh->prepare("UPDATE dashboard_sites set ds_description=:description, ds_image_url=:image_url, ds_image_local=:image_local, ds_date=:date WHERE ds_hash=:hash");
 
         //$stmt->bindParam(':title', $link->title);
         $stmt->bindParam(':hash', $link->hash);
@@ -147,12 +143,34 @@ class Database {
         $stmt->bindParam(':image_local', $link->image_local);
         $stmt->bindParam(':date', $link->date);
 
-        return $stmt->execute();
+        return $stmt->execute(); */
+
+        $params = [
+            null,
+            $link->title, 
+            $link->hash, 
+            $link->description, 
+            $link->image_url,
+            $link->image_local,
+            $link->date,
+            $link->base_url,
+            $link->origin_url,
+            $link->content
+        ];
+
+        return $this->func('update_link', $params);
     }
 
-    private function func($proc){
+    private function func($_proc,$_params=[]){
 
-        $stmt = $this->dbh->prepare("CALL " . $proc . "(0)");
+        $params="";
+        for($i=0; $i<count($_params); $i++) $params .= ",?";
+
+        $query="CALL " . $_proc . "(" . substr($params,1) . ")";
+        //var_dump($_params);
+        $stmt = $this->dbh->prepare($query);
+
+        for($i=0; $i<count($_params); $i++) $stmt->bindParam(($i+1),$_params[$i]);
 
         return $stmt->execute();
     }
@@ -168,8 +186,11 @@ class Database {
         return $row;
     }
 
-    public function loadSource(){
+    public function loadSource($opt){
 
-        return $this->func("setQueue");
+        if(empty($opt)) $prop[] = 0;
+        else $prop[] = $opt;
+
+        return $this->func("set_queue", $prop);
     }
 }

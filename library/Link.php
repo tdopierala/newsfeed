@@ -11,6 +11,7 @@ class Link {
     public $image_local;
     public $origin_url;
     public $link2;
+    public $content;
 
     public function __construct($params){
 
