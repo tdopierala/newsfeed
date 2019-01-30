@@ -214,6 +214,42 @@ class NewsFeed {
 
             if(!empty($news_list[$i]->image_url) or trim($news_list[$i]->image_url) != ""){
 
+                $imgtype = null; $ext = null;
+                switch(exif_imagetype($news_list[$i]->image_url)) {
+                    case IMG_GIF:  $imgtype = 'image/gif';  $ext = ".gif"; break;
+                    case IMG_JPG:  $imgtype = 'image/jpg';  $ext = ".jpg"; break;
+                    case IMG_JPEG: $imgtype = 'image/jpeg'; $ext = ".jpeg"; break;
+                    case IMG_PNG:  $imgtype = 'image/png';  $ext = ".png"; break;
+
+                    case IMAGETYPE_GIF:  $imgtype = 'image/gif';  $ext = ".gif"; break;
+                    case IMAGETYPE_JPEG: $imgtype = 'image/jpeg'; $ext = ".jpeg"; break;
+                    case IMAGETYPE_PNG:  $imgtype = 'image/png';  $ext = ".png"; break;
+                    /* 
+                    case IMAGETYPE_SWF: $imgtype = 'swf'; break;
+                    case IMAGETYPE_PSD: $imgtype = 'psd'; break;
+                    case IMAGETYPE_BMP: $imgtype = 'bmp'; break;
+                    case IMAGETYPE_TIFF_II: $imgtype = 'tiff II'; break;
+                    case IMAGETYPE_TIFF_MM: $imgtype = 'tiff mm'; break;
+                    case IMAGETYPE_JPC: $imgtype = 'jpc'; break;
+                    case IMAGETYPE_JP2: $imgtype = 'jp2'; break;
+                    case IMAGETYPE_JPX: $imgtype = 'jpx'; break;
+                    case IMAGETYPE_JB2: $imgtype = 'jb2'; break;
+                    case IMAGETYPE_SWC: $imgtype = 'swc'; break;
+                    case IMAGETYPE_IFF: $imgtype = 'iff'; break;
+                    case IMAGETYPE_WBMP: $imgtype = 'wbmp'; break;
+                    case IMAGETYPE_XBM: $imgtype = 'xbm'; break;
+                    case IMAGETYPE_ICO: $imgtype = 'ico'; break;
+                    case IMAGETYPE_WEBP: $imgtype = 'webp'; break;
+                     */
+                    //case IMG_WBMP: $imgtype = 'image/wbmp'; break;
+                    //case IMG_XPM:  $imgtype = 'image/xpm'; break;
+                    default:       $imgtype = 'unknown';
+                }
+
+                //var_dump($imgtype);
+
+                if(is_null($imgtype) or $imgtype == 'unknown' or is_null($ext)) continue;
+
                 $filename = $script . "_" . $news_list[$i]->hash;
 
                 $news_list[$i]->image_local = $filename . ".jpg";
@@ -224,6 +260,8 @@ class NewsFeed {
 
                     $image = file_get_contents($news_list[$i]->image_url);
                     file_put_contents($new_img, $image);
+
+                    $this->prepareImage($new_img);
                 }
             }
         }
@@ -263,6 +301,60 @@ class NewsFeed {
         $res = $this->db->loadSource($opt);
         Log::init("Source list was successfuly loaded.");
         //echo date("Y-m-d H:i:s") . ": Source list was successfuly loaded.\n";
+    }
+
+    private function prepareImage($_image){
+
+        $ext = substr($_image, strrpos($_image, ".")+1);
+        $filename = substr($_image, strrpos($_image, "/")+1, (-1)*(strlen($ext)+1));
+
+        $_origin = _ROOTDIR_ . '/images/normal/' . $filename . ".jpg";
+        $_thumb = _ROOTDIR_ . '/images/thumb/' . $filename . ".jpg";
+
+        switch ($ext) {
+            case 'jpg':
+            case 'jpeg': $image = imagecreatefromjpeg($_image); break;
+            case 'gif':  $image = imagecreatefromgif($_image); break;
+            case 'png':  $image = imagecreatefrompng($_image); break;
+        }
+
+        imagejpeg($image, $_origin);
+
+        $img = imagecreatefromjpeg($_origin);
+        //$dir = _ROOTDIR_ ."/images/thumbnails/";
+        //if (!file_exists($dir) && !is_dir($dir)) mkdir($dir);
+
+        $thumb_width = 300;
+        $thumb_height = 150;
+
+        $width = imagesx($img);
+        $height = imagesy($img);
+
+        $original_aspect = $width / $height;
+        $thumb_aspect = $thumb_width / $thumb_height;
+
+        if ( $original_aspect >= $thumb_aspect ){ //if image is wider than thumbnail (in aspect ratio sense)
+            $new_height = $thumb_height;
+            $new_width = $width / ($height / $thumb_height);
+        } else { //if the thumbnail is wider than the image
+            $new_width = $thumb_width;
+            $new_height = $height / ($width / $thumb_width);
+        }
+
+        $thumb = imagecreatetruecolor( $thumb_width, $thumb_height );
+
+        // resize and crop
+        $result = imagecopyresampled(
+            $thumb,
+            $img,
+            0 - ($new_width - $thumb_width) / 2, // center the image horizontally
+            0 - ($new_height - $thumb_height) / 2, // center the image vertically
+            0, 0,
+            $new_width, $new_height,
+            $width, $height
+        );
+
+        imagejpeg($thumb, $_thumb);
     }
 
     public function __toString(){
