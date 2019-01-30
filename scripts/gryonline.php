@@ -11,7 +11,7 @@ foreach($x->channel->item as $entry) {
 
     $div = $dom->find('.bpic');
 
-    if($_this->debug) var_dump($_link);
+    if($_this->debug) Log::init($_link);
     
     if(count($div)>0){
 

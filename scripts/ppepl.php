@@ -4,7 +4,7 @@ foreach($x->channel->item as $entry) {
 
     $_link = (string)$entry->link;
     
-    if($_this->debug) var_dump($_link);
+    if($_this->debug) Log::init($_link);
 
     $dom->loadFromFile($_link);
     $html = $dom->outerHtml;

@@ -20,7 +20,7 @@ foreach($x->channel->item as $entry) {
     $url = explode("/",$_link)[2];
     switch($url){
         case "www.tvn24.pl":
-            if($_this->debug) var_dump($_link);
+            if($_this->debug) Log::init($_link);
 
             $dom->loadFromFile($_link);
             $html = $dom->outerHtml;
@@ -46,7 +46,7 @@ foreach($x->channel->item as $entry) {
 
         break;
         case "konkret24.tvn24.pl":
-            if($_this->debug) var_dump($_link);
+            if($_this->debug) Log::init($_link);
 
             $dom->loadFromFile($_link);
             $html = $dom->outerHtml;

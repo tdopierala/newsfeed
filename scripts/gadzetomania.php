@@ -5,7 +5,7 @@ foreach($x->channel->item as $entry) {
     $_link = (string)$entry->link;
     $html = file_get_contents($_link);
 
-    if($_this->debug) var_dump($_link);
+    if($_this->debug) Log::init($_link);
 
     $news_list[] = new Link(array(
         'title' => (string)$entry->title,
