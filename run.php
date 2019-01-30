@@ -1,4 +1,5 @@
 <?php
+if(php_sapi_name() != 'cli') die();
 
 define("_ROOTDIR_", __DIR__);
 
