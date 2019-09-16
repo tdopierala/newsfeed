@@ -1,2 +1,5 @@
-#!/bin/bash
-php run.php collect >> ./collector.log
+#!/bin/sh
+
+#php run.php collect >> ./collector.log
+
+
