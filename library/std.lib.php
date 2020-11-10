@@ -74,10 +74,29 @@ class Std {
     
         echo "\n" . $out;
         return $out;
-    }
+	}
+	
+	public static function generate_user_agent() {
+
+		$f = './useragents.txt';
+
+		if(file_exists($f)){
+
+			$lines = file($f);
+
+			return 'User-Agent: '.$lines[array_rand($lines)];
+		
+		} else {
+
+			return 'User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36';
+
+		}
+	}
 
     /* public static log($msg) {
 
 
-    } */
+	} */
+	
+
 }

@@ -11,12 +11,18 @@ foreach($x->channel->item as $entry) {
 	$div = $dom->find('.post-image');
 
 	if(strlen($div)>0){
-
+		/*
 		$databg = $div->getAttribute('data-bg');
 
 		preg_match('/\(.*?\)/', $databg, $out);
 
 		$image_url = substr($out[0],1,strlen($out[0])-2);
+		*/
+
+		$dom->load($div->innerHtml);
+		$imgs = $dom->find('img', 0);
+
+		$image_url = htmlspecialchars_decode($imgs->getAttribute('src'));
 
 	} else {
 		continue;

@@ -158,16 +158,40 @@ class Database {
 
 	private function func($_proc,$_params=[]){
 
-		$params="";
-		for($i=0; $i<count($_params); $i++) $params .= ",?";
+		try {
 
-		$query="CALL " . $_proc . "(" . substr($params,1) . ")";
-		//var_dump($_params);
-		$stmt = $this->dbh->prepare($query);
+			$params="";
+			for($i=0; $i<count($_params); $i++) $params .= ",?";
 
-		for($i=0; $i<count($_params); $i++) $stmt->bindParam(($i+1),$_params[$i]);
+			$query="SET NAMES utf8mb4;CALL " . $_proc . "(" . substr($params,1) . ")";
+			//var_dump($_params);
 
-		return $stmt->execute();
+			//echo "\n" . $query . "\n";
+
+			$this->dbh->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_WARNING );
+			$stmt = $this->dbh->prepare($query);
+
+			$fp = fopen('database_log.sql', 'a');
+			fwrite($fp, "\n\n");
+			fwrite($fp, $query); fwrite($fp, "\n");
+			
+
+			for($i=0; $i<count($_params); $i++) { 
+				$stmt->bindParam(($i+1),$_params[$i]); 
+				fwrite($fp, $_params[$i]); fwrite($fp, "\n----------------------------------------------------------------------------\n"); }
+
+			fclose($fp);
+			
+			$result = $stmt->execute();
+
+			//print_r($this->dbh->errorInfo());
+
+			return $result;
+
+		} catch (PDOException $e) {
+			print "!!!!!!!!!!!!!!!!!!!!!!!!!Error!: " . $e->getMessage() . "<br/>";
+			die();
+		}
 	}
 
 	public function getBrokenFeeds(){

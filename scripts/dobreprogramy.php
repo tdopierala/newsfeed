@@ -17,6 +17,6 @@ foreach($x->channel->item as $entry) {
 		'image_url' => $entry->image,
 		'origin_url' => $entry->guid,
 		'link2' => $entry->link
-		,'content' => $html
+		,'content' => utf8_encode($html)
 	));
 }

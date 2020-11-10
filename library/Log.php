@@ -4,9 +4,15 @@ class Log {
 
 	private static $message;
 
+	private function __construct(){
+
+	}
+
+
 	public static function init($msg){
 		self::$message = $msg;
-		self::printout($msg);
+		self::console_nl($msg);
+		echo "\n";
 	}
 
 	private static function output($message){
@@ -33,10 +39,35 @@ class Log {
 	public static function console($msg){
 		self::$message = $msg;
 		self::toFile($msg);
-		//echo "\r";
-		//for ($i=0;$i<150;$i++) { echo ' '; }
-		//echo "\r" . substr(self::output($msg), 0, 150);
-		echo "\n" . self::output($msg) . " {" . strlen(self::output($msg)) . "}";
+
+		$_msg = self::output($msg);
+		$count = 134;
+		$len = strlen($_msg);
+
+		if($len < $count)
+			for ($i=0; $i<($count - $len); $i++)
+				$_msg = $_msg.' ';
+
+		$clear = "\r";
+		for ($i=0; $i<$count+6; $i++) $clear = $clear . ' ';
+		$clear = $clear . "\r";
+
+		echo $clear . substr($_msg, 0, $count) . " {" . sprintf('%03d', strlen(self::output($msg))) . "}";
+	}
+
+	public static function console_nl($msg){
+		self::$message = $msg;
+		self::toFile($msg);
+
+		$_msg = self::output($msg);
+		$count = 134;
+		$len = strlen($_msg);
+
+		if($len < $count)
+			for ($i=0; $i<($count - $len); $i++)
+				$_msg = $_msg.' ';
+
+		echo "\n" . substr($_msg, 0, $count) . " {" . sprintf('%03d', strlen(self::output($msg))) . "}";
 	}
 
 	public static function dump($msg){

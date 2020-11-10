@@ -82,12 +82,12 @@ class NewsFeed {
 
 		} catch (PDOException $e) {
 
-			print date("Y-m-d H:i:s").": Error!: " . $e->getMessage() . "<br/>";
+			print "\n[".date("Y-m-d H:i:s")."]: Error!: " . $e->getMessage() . "<br/>";
 			//die();
 
 		} catch (Exception|EmptyCollectionException|ErrorException $e) {
 			//print "Error: ".$e->getMessage();
-			print date("Y-m-d H:i:s").": {".$e->getMessage() . "} in " . $e->getFile() . ", line " . $e->getLine() . "\n";
+			print "\n[".date("Y-m-d H:i:s")."] {".$e->getMessage() . "} in " . $e->getFile() . ", line " . $e->getLine() . "\n";
 			//die();
 		} /* finally {
 			print "error?\n";
@@ -189,7 +189,7 @@ class NewsFeed {
 
 			$context = stream_context_create([
 				"http" => [
-					"header" => "User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36"
+					"header" => Std::generate_user_agent()
 				]
 			]);
 			$content = file_get_contents($this->feed_url, false, $context);
@@ -230,7 +230,7 @@ class NewsFeed {
 				$downloaded_img = _ROOTDIR_ . '/images/download/' . $filename . '.unknown' ;
 
 				$context = stream_context_create([
-					"http" => ["header" => "User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36"]
+					"http" => ["header" => Std::generate_user_agent()]
 				]);
 
 				$image = file_get_contents(str_replace(" ", "%20", $news_list[$i]->image_url), false, $context);

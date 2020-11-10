@@ -10,6 +10,10 @@ foreach($x->channel->item as $entry) {
 	$dom->loadFromFile($_link);
 	$html = $dom->outerHtml;
 
+	Log::init(strlen($html));
+
+	if(strlen($html) < 1000) echo $html;
+
 	$div = $dom->find('#article');
 
 	$dom->load($div);
@@ -42,4 +46,6 @@ foreach($x->channel->item as $entry) {
 		'link2' => $entry->link,
 		'content' => $html
 	));
+
+	sleep(90);
 }
